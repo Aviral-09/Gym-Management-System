@@ -1,0 +1,4 @@
+src/admin/Trainers.tsx(6,16): error TS6133: 'Trash2' is declared but its value is never read.
+src/admin/Trainers.tsx(6,24): error TS6133: 'Search' is declared but its value is never read.
+src/admin/Trainers.tsx(6,38): error TS6133: 'Phone' is declared but its value is never read.
+src/admin/Trainers.tsx(7,18): error TS6133: 'AnimatePresence' is declared but its value is never read.

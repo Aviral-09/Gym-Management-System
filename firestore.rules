@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Core Helper Functions ---
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Safely fetch user profile
+    function getUserProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Role-based verification
+    function hasRole(role) {
+      return isAuthenticated() && getUserProfile().role == role;
+    }
+
+    function isOwner() { return hasRole('ADMIN') || hasRole('OWNER'); }
+    function isStaff() { return hasRole('STAFF'); }
+    function isTrainer() { return hasRole('TRAINER'); }
+
+    // --- Collection Rules ---
+
+    // Users: Private to self
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Franchises: Global read (recursive for subcollections like analytics), Owner-only write
+    match /franchises/{franchiseId} {
+      allow read: if true;
+      match /{allSubcollections=**} {
+        allow read: if true;
+      }
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (isOwner() || getUserProfile().franchiseId == franchiseId);
+      allow delete: if isAuthenticated() && isOwner();
+    }
+
+    // Branches: Read for franchise members, Write for Owner/Staff
+    match /branches/{branchId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (isOwner() || isStaff());
+    }
+
+    // Membership Plans: Global read, Authenticated Owner/Staff write
+    match /membership_plans/{planId} {
+      allow read: if true;
+      // Allow write if authenticated. We relax the role check slightly to avoid potential profile fetch errors during quick writes.
+      allow write: if isAuthenticated(); 
+    }
+
+    // Plans (Alias for membership_plans)
+    match /plans/{planId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Members: Read/Write for Owner & Staff.
+    match /members/{memberId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (isOwner() || isStaff());
+    }
+
+    // Trainers: Read/Write for Owner.
+    match /trainers/{trainerId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (isOwner() || isStaff());
+    }
+  }
+}

@@ -1,0 +1,112 @@
+
+> gym-management-system@0.0.0 lint
+> eslint .
+
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\admin\Branches.tsx
+  13:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\admin\Members.tsx
+  17:46  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  29:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\admin\Members.tsx:29:13
+  27 |     useEffect(() => {
+  28 |         if (!selectedBranch) {
+> 29 |             setMembers([]);
+     |             ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |             setPlans([]);
+  31 |             setTrainers([]);
+  32 |             setIsDataLoading(false);  react-hooks/set-state-in-effect
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\admin\Plans.tsx
+  24:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\admin\Plans.tsx:24:13
+  22 |     useEffect(() => {
+  23 |         if (!selectedBranch) {
+> 24 |             setPlans([]);
+     |             ^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |             setIsDataLoading(false);
+  26 |             return;
+  27 |         }  react-hooks/set-state-in-effect
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\admin\Trainers.tsx
+  24:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\admin\Trainers.tsx:24:13
+  22 |     useEffect(() => {
+  23 |         if (!selectedBranch) {
+> 24 |             setTrainers([]);
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |             setMembers([]);
+  26 |             setIsDataLoading(false);
+  27 |             return;  react-hooks/set-state-in-effect
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\auth\AuthContext.tsx
+  36:25  error  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  75:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\components\ThemeContext.tsx
+  37:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\dashboard\DashboardHome.tsx
+  42:29  error    Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  47:8   warning  React Hook useEffect has a missing dependency: 'branch'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\data\templates.ts
+  15:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\hooks\useFranchise.tsx
+   83:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\hooks\useFranchise.tsx:83:9
+  81 |         if (branches.length === 0) return;
+  82 |
+> 83 |         setSelectedBranch((current) => {
+     |         ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  84 |             // 1. Check if existing selection is still valid in the new branches list
+  85 |             if (current && branches.some(b => b.id === current.id)) {
+  86 |                 return branches.find(b => b.id === current.id) || branches[0];  react-hooks/set-state-in-effect
+  121:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-refresh/only-export-components
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\pages\Login.tsx
+  28:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\aviral\Desktop\full stack\gym management system\src\pages\Signup.tsx
+   34:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 23 problems (22 errors, 1 warning)
+
