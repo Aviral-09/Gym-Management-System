@@ -38,16 +38,14 @@ exports.onboardNewGym = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    // 3. Prevent Duplicate Onboarding
+    // 3. Duplicate Onboarding Check (Relaxed to allow fresh starts)
     const userDocRef = db.collection("users").doc(uid);
     const userSnapshot = await userDocRef.get();
 
     if (userSnapshot.exists && userSnapshot.data().franchiseId) {
-      console.warn(`User ${uid} already onboarded to ${userSnapshot.data().franchiseId}`);
-      throw new functions.https.HttpsError(
-        "already-exists",
-        "This user is already associated with an existing gym franchise."
-      );
+      console.log(`User ${uid} is re-onboarding. Previous Franchise: ${userSnapshot.data().franchiseId}`);
+      // We allow this to support "fresh start" requests where a user wants to create a new gym instance.
+      // The new franchiseId will eventually overwrite the old one in the user document.
     }
 
     const batch = db.batch();

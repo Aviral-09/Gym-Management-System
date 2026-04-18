@@ -32,7 +32,8 @@ const Signup = () => {
     // Effect: Synchronize URL templateId to Firestore if authenticated but profile is missing it
     useEffect(() => {
         // Guard: Prevent signup if already logged in AND onboarded
-        if (user && profile?.franchiseId && !loading) {
+        // BUT allow if they are explicitly in an onboarding flow (indicated by templateId in URL)
+        if (user && profile?.franchiseId && !loading && !templateId) {
             navigate('/dashboard');
         }
 
@@ -110,16 +111,16 @@ const Signup = () => {
         setError('');
 
         try {
-            console.log("Selected Template ID:", selectedTemplateId);
             let resultingFranchiseId: string | boolean = false;
             
+            // If the user is logged in, we check if they are initiating a NEW onboarding or just finishing an old one.
+            // If they have a templateId in the URL, we treat it as a fresh onboarding request.
             if (user) {
-                console.log("Saving onboarding data for existing user:", user.uid);
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-
-                if (userDoc.exists()) {
-                    resultingFranchiseId = userDoc.data().franchiseId;
+                if (profile?.franchiseId && !templateId) {
+                    console.log("Using existing franchise for already onboarded user.");
+                    resultingFranchiseId = profile.franchiseId;
                 } else {
+                    console.log("Starting fresh onboarding/provisioning for user:", user.uid);
                     resultingFranchiseId = await createFranchiseAndOwner(user, brandName);
                 }
             } else {
