@@ -75,7 +75,7 @@ const BranchSelector = ({ branches, selectedBranch, onSelect }: BranchSelectorPr
                             <div className="mt-2 pt-2 border-t border">
                                 <button
                                     onClick={() => {
-                                        navigate('/admin/branches');
+                                        navigate('/dashboard/branches');
                                         setIsOpen(false);
                                     }}
                                     className="w-full text-left px-4 py-3 text-[10px] font-black text-primary uppercase tracking-widest hover:bg-primary/5 transition-all flex items-center gap-2"

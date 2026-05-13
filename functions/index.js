@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const cors = require("cors")({ origin: ["http://localhost:5173", true] });
 admin.initializeApp();
 
 const db = admin.firestore();
@@ -9,43 +10,48 @@ const db = admin.firestore();
  * Moves sensitive provisioning logic from frontend to backend.
  * Validates brand names, prevents duplicate onboarding, and ensures schema integrity.
  */
-exports.onboardNewGym = functions.https.onCall(async (data, context) => {
-  // 1. Authentication Check
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Login required to onboard."
-    );
-  }
+exports.onboardNewGym = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      console.log("Function Hit - Onboarding New Gym");
 
-  const { brandName, templateId, planId, billingCycle } = data;
-  const uid = context.auth.uid;
-  const email = context.auth.token.email;
+    // 1. Authentication Check
+    let uid = null;
+    let email = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const idToken = authHeader.split('Bearer ')[1];
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        uid = decodedToken.uid;
+        email = decodedToken.email;
+      } catch (e) {
+        throw new Error("unauthenticated: Invalid token.");
+      }
+    } else {
+      throw new Error("unauthenticated: Login required to onboard.");
+    }
 
-  // 2. Structural Validation
-  if (!brandName || brandName.length < 3) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Brand Name must be at least 3 characters long."
-    );
-  }
+    // httpsCallable sends payload wrapped in 'data'
+    const data = req.body.data || {};
+    const { brandName, templateId, planId, billingCycle } = data;
 
-  if (!templateId) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Template Selection is required."
-    );
-  }
+    // 2. Structural Validation
+    if (!brandName || brandName.length < 3) {
+      throw new Error("invalid-argument: Brand Name must be at least 3 characters long.");
+    }
 
-  try {
-    // 3. Duplicate Onboarding Check (Relaxed to allow fresh starts)
+    if (!templateId) {
+      throw new Error("invalid-argument: Template Selection is required.");
+    }
+
+    // 3. Prevent Duplicate Onboarding
     const userDocRef = db.collection("users").doc(uid);
     const userSnapshot = await userDocRef.get();
 
     if (userSnapshot.exists && userSnapshot.data().franchiseId) {
-      console.log(`User ${uid} is re-onboarding. Previous Franchise: ${userSnapshot.data().franchiseId}`);
-      // We allow this to support "fresh start" requests where a user wants to create a new gym instance.
-      // The new franchiseId will eventually overwrite the old one in the user document.
+      console.warn(`User ${uid} already onboarded to ${userSnapshot.data().franchiseId}`);
+      throw new Error("already-exists: This user is already associated with an existing gym franchise.");
     }
 
     const batch = db.batch();
@@ -108,7 +114,7 @@ exports.onboardNewGym = functions.https.onCall(async (data, context) => {
     const userData = {
       uid: uid,
       email: email,
-      displayName: brandName, // Default to brand name for UI
+      displayName: brandName,
       franchiseId: franchiseRef.id,
       role: "OWNER",
       onboardingCompleted: true,
@@ -127,19 +133,37 @@ exports.onboardNewGym = functions.https.onCall(async (data, context) => {
     await batch.commit();
     console.log("Atomic onboarding batch committed successfully.");
 
-    return {
-      success: true,
-      franchiseId: franchiseRef.id,
-      branchId: branchRef.id,
-      slug: slug
-    };
+    // Return format compatible with httpsCallable
+    return res.status(200).json({
+      data: {
+        success: true,
+        franchiseId: franchiseRef.id,
+        branchId: branchRef.id,
+        slug: slug
+      }
+    });
 
   } catch (error) {
     console.error("Critical Onboarding Failure:", error);
-    if (error instanceof functions.https.HttpsError) throw error;
-    throw new functions.https.HttpsError("internal", `System failed to provision your gym: ${error.message}`);
+    
+    let code = "internal";
+    let message = error.message;
+    if (message.includes(":")) {
+      const parts = message.split(":");
+      code = parts[0];
+      message = parts.slice(1).join(":").trim();
+    }
+
+    return res.status(500).json({
+      error: {
+        message: message,
+        status: code.toUpperCase()
+      }
+    });
   }
+  }); // End cors
 });
+
 
 /**
  * onMemberCreated

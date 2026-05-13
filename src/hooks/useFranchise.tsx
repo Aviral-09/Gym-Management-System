@@ -17,88 +17,56 @@ const FranchiseContext = createContext<FranchiseContextType | undefined>(undefin
 
 export const FranchiseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { profile } = useAuth();
-    const { franchiseId: urlFranchiseId } = useParams();
     const [franchise, setFranchise] = useState<Franchise | null>(null);
     const [branches, setBranches] = useState<Branch[]>([]);
     const [activeBranchId, setActiveBranchId] = useState<string | null>(localStorage.getItem('activeBranchId'));
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let unsubscribe: (() => void) | undefined;
-        let isMounted = true;
+        if (!profile?.franchiseId) {
+            setLoading(false);
+            return;
+        }
 
-        const initializeData = async () => {
-            const fid = urlFranchiseId || (profile?.franchiseId ? String(profile.franchiseId) : null);
-            
-            // Guard: Must have an active user and a valid franchiseId
-            if (!auth.currentUser || !fid || fid === "undefined") {
-                if (isMounted) {
-                    setFranchise(null);
-                    setBranches([]);
-                    setLoading(false);
-                }
-                return;
+        setLoading(true);
+        console.log("[useFranchise] Setting up snapshots for franchise:", profile.franchiseId);
+
+        const unsubscribeFranchise = onSnapshot(doc(db, 'franchises', profile.franchiseId), (docSnap) => {
+            if (docSnap.exists()) {
+                setFranchise({ id: docSnap.id, ...docSnap.data() } as Franchise);
             }
+        });
 
-            try {
-                if (isMounted) setLoading(true);
-
-                // 1. Fetch Franchise Static Info
-                console.log(`[useFranchise] Initializing with franchiseId: ${fid}`);
-                const franchiseDoc = await getDoc(doc(db, 'franchises', fid));
-
-                if (isMounted) {
-                    if (franchiseDoc.exists()) {
-                        setFranchise({ id: franchiseDoc.id, ...franchiseDoc.data() } as Franchise);
-                    } else {
-                        console.error(`[useFranchise] No document matches franchiseId ${fid}`);
-                        setFranchise(null);
-                    }
-                }
-
-                // 2. Subscribe to Branches (Real-time)
-                const q = query(
-                    collection(db, 'branches'),
-                    where('franchiseId', '==', fid)
-                );
-
-                unsubscribe = onSnapshot(q,
-                    (snapshot) => {
-                        if (!isMounted) return;
-                        const branchList = snapshot.docs.map(doc => ({
-                            id: doc.id,
-                            ...doc.data()
-                        } as Branch));
-                        setBranches(branchList);
-                        setLoading(false);
-                    },
-                    (error) => {
-                        console.error("FranchiseProvider: Branch subscription error:", error);
-                        if (isMounted) setLoading(false);
-                    }
-                );
-            } catch (err) {
-                console.error("FranchiseProvider: Initialization error:", err);
-                if (isMounted) setLoading(false);
-            }
-        };
-
-        initializeData();
+        const branchesQuery = query(collection(db, 'branches'), where('franchiseId', '==', profile.franchiseId));
+        const unsubscribeBranches = onSnapshot(branchesQuery, (snapshot) => {
+            const branchesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Branch));
+            console.log("[useFranchise] Branches loaded:", branchesData.length);
+            setBranches(branchesData);
+            setLoading(false);
+        }, (error) => {
+            console.error("[useFranchise] Branches snapshot error:", error);
+            setLoading(false);
+        });
 
         return () => {
-            isMounted = false;
-            if (unsubscribe) unsubscribe();
+            unsubscribeFranchise();
+            unsubscribeBranches();
         };
-    }, [profile?.franchiseId, urlFranchiseId]);
+    }, [profile?.franchiseId]);
 
-    // Derived State: Selected Branch
     const selectedBranch = useMemo(() => {
         if (branches.length === 0) return null;
-        return branches.find(b => b.id === activeBranchId) || branches[0];
+        
+        const branch = activeBranchId 
+            ? branches.find(b => b.id === activeBranchId) || branches[0]
+            : branches[0];
+            
+        console.log("[useFranchise] selectedBranch memo: activeBranchId=", activeBranchId, "selected=", branch?.name, branch?.id);
+        return branch;
     }, [branches, activeBranchId]);
 
-    // Stable callback for selecting branches
     const selectBranch = useCallback((branchId: string) => {
+        console.log("[useFranchise] manually selecting branchId:", branchId);
         setActiveBranchId(branchId);
         localStorage.setItem('activeBranchId', branchId);
     }, []);

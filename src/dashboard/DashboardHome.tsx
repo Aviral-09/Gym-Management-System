@@ -26,10 +26,12 @@ const DashboardHome = () => {
     useEffect(() => {
         if (!franchise?.id) return;
 
+        setLoading(true);
+        console.log("[DashboardHome] Subscribing to analytics for branch:", branch?.name);
+
         // Subscribe to real-time analytics aggregated by Cloud Functions
         const metricsRef = doc(db, 'franchises', franchise.id, 'analytics', 'overview');
         
-        // Added error handler to ensure UI always loads even if analytics doc is missing or inaccessible
         const unsubscribe = onSnapshot(metricsRef, 
             (docSnapshot) => {
                 if (docSnapshot.exists()) {
@@ -44,7 +46,7 @@ const DashboardHome = () => {
         );
 
         return () => unsubscribe();
-    }, [franchise?.id]);
+    }, [franchise?.id, branch?.id]);
 
     if (!branch) return (
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">

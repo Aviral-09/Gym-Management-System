@@ -34,9 +34,7 @@ const AnimatedRoutes = () => {
 
         <Route path="/dashboard" element={
           <ProtectedRoute>
-            <FranchiseProvider>
-              <DashboardLayout />
-            </FranchiseProvider>
+            <DashboardLayout />
           </ProtectedRoute>
         }>
           <Route index element={<DashboardHome />} />
@@ -57,7 +55,9 @@ function App() {
     <Router>
       <ThemeProvider>
         <AuthProvider>
-          <AnimatedRoutes />
+          <FranchiseProvider>
+            <AnimatedRoutes />
+          </FranchiseProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>

@@ -71,7 +71,7 @@ const Branches = () => {
 
     const handleGoToDashboard = (branchId: string) => {
         selectBranch(branchId);
-        navigate('/admin/dashboard');
+        navigate('/dashboard');
     };
 
     return (
