@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
+import { doc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useAuth } from '../auth/AuthContext';
 import type { Franchise, Branch } from '../types';
 
