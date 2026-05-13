@@ -24,15 +24,23 @@ const Signup = () => {
 
     const planId: PlanType = (location.state as { planId?: PlanType })?.planId || 'Basic';
     const billing: 'monthly' | 'yearly' = (location.state as { billing?: 'monthly' | 'yearly' })?.billing || 'monthly';
+    const paid = (location.state as { paid?: boolean })?.paid || false;
     
     // Priority Hierarchy: Firestore Profile > URL Param > LocalStorage (for redirects)
     const storedTemplateId = localStorage.getItem('selectedTemplateId');
     const selectedTemplateId = profile?.templateId || templateId || storedTemplateId || '';
 
+    // Enforce payment before onboarding
+    useEffect(() => {
+        if (!paid && !profile?.franchiseId) {
+            navigate('/subscription');
+        }
+    }, [paid, profile, navigate]);
+
     // Effect: Synchronize URL templateId to Firestore if authenticated but profile is missing it
     useEffect(() => {
         // Guard: Prevent signup if already logged in AND onboarded
-        if (user && profile?.franchiseId && !loading) {
+        if (user && profile?.franchiseId && !loading && !templateId) {
             navigate('/dashboard');
         }
 

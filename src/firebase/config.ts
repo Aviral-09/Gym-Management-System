@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
-import { getFunctions } from 'firebase/functions';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { initializeFirestore, persistentLocalCache, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -39,5 +39,13 @@ export const functions = getFunctions(app);
 export const db = initializeFirestore(app, {
     localCache: persistentLocalCache({}) 
 });
+
+// Connect to Emulators in development
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    console.log("Connecting to Firebase Emulators...");
+    connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+    connectFirestoreEmulator(db, "127.0.0.1", 8080);
+    connectAuthEmulator(auth, "http://127.0.0.1:9099");
+}
 
 export default app;

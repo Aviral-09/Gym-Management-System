@@ -1,7 +1,16 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require("cors")({ origin: ["http://localhost:5173", true] });
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+
 admin.initializeApp();
+
+// Initialize Razorpay with test keys
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder_id',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_test_placeholder_secret',
+});
 
 const db = admin.firestore();
 
@@ -162,6 +171,103 @@ exports.onboardNewGym = functions.https.onRequest((req, res) => {
     });
   }
   }); // End cors
+});
+
+/**
+ * createRazorpayOrder
+ * Creates a Razorpay order for subscription payment.
+ */
+exports.createRazorpayOrder = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const data = req.body.data || {};
+      const { amount, currency = "INR" } = data;
+
+      if (!amount) {
+        throw new Error("invalid-argument: Amount is required.");
+      }
+
+      const options = {
+        amount: Math.round(amount * 100), // amount in paise
+        currency: currency,
+        receipt: `receipt_order_${Math.random().toString(36).substring(2, 15)}`,
+      };
+
+      const order = await razorpay.orders.create(options);
+
+      return res.status(200).json({
+        data: {
+          success: true,
+          orderId: order.id,
+          amount: order.amount,
+          currency: order.currency
+        }
+      });
+    } catch (error) {
+      console.error("Create Order Failure:", error);
+      return res.status(500).json({
+        error: {
+          message: error.message,
+          status: "INTERNAL"
+        }
+      });
+    }
+  });
+});
+
+/**
+ * verifyRazorpayPayment
+ * Verifies the Razorpay payment signature.
+ */
+exports.verifyRazorpayPayment = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const data = req.body.data || {};
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, planId } = data;
+
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        throw new Error("invalid-argument: Missing payment verification details.");
+      }
+
+      const key_secret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_placeholder_secret';
+      
+      const generated_signature = crypto
+        .createHmac("sha256", key_secret)
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest("hex");
+
+      if (generated_signature !== razorpay_signature) {
+        throw new Error("unauthenticated: Invalid signature.");
+      }
+
+      // Payment verified successfully!
+      // Update user's payment status in Firestore if userId is provided
+      if (userId) {
+        await db.collection("users").doc(userId).update({
+          paymentStatus: "paid",
+          razorpayOrderId: razorpay_order_id,
+          razorpayPaymentId: razorpay_payment_id,
+          planId: planId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      return res.status(200).json({
+        data: {
+          success: true,
+          message: "Payment verified successfully"
+        }
+      });
+    } catch (error) {
+      console.error("Verify Payment Failure:", error);
+      return res.status(500).json({
+        error: {
+          message: error.message,
+          status: "INTERNAL"
+        }
+      });
+    }
+  });
 });
 
 

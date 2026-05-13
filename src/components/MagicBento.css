@@ -9,6 +9,13 @@
     color-scheme: light dark;
 }
 
+:root.light {
+    --background-dark: #f8f9fa;
+    --white: #1a1523;
+    --border-dim: rgba(0, 0, 0, 0.1);
+    --purple-glow: rgba(131, 0, 255, 0.2);
+}
+
 .card-grid {
     display: grid;
     gap: 0.5em;

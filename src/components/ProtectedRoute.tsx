@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useEffect } from 'react';
+import { useFranchise } from '../hooks/useFranchise';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -8,7 +9,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requireFranchise = true }: ProtectedRouteProps) => {
-    const { user, profile, loading } = useAuth();
+    const { user, profile, loading: authLoading } = useAuth();
+    const { franchise, loading: franchiseLoading } = useFranchise();
+    const loading = authLoading || franchiseLoading;
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -24,14 +27,28 @@ const ProtectedRoute = ({ children, requireFranchise = true }: ProtectedRoutePro
                 navigate('/login', { state: { from: location }, replace: true });
             }
         } else if (requireFranchise && !profile?.franchiseId) {
-            // 2. Authenticated but Un-onboarded -> Send to Onboarding
+            // 2. Authenticated but Un-onboarded -> Send to Subscription first
+            const isSubscriptionPage = location.pathname === '/subscription';
             const isOnboarding = location.pathname === '/onboarding' || location.pathname.startsWith('/onboarding/');
-            if (!isOnboarding) {
-                console.log("Redirecting to onboarding: Authenticated user detected without franchiseId");
-                navigate('/onboarding', { replace: true });
+            
+            if (!isSubscriptionPage && !isOnboarding) {
+                console.log("Redirecting to subscription: Un-onboarded user detected");
+                navigate('/subscription', { replace: true });
+            }
+        } else if (requireFranchise && profile?.franchiseId) {
+            // 3. Authenticated and Onboarded -> Check Subscription
+            const isSubscribed = franchise?.subscription?.status === 'active' || franchise?.subscription?.status === 'trial';
+            const isSubscriptionPage = location.pathname === '/subscription';
+            
+            if (!isSubscribed && !isSubscriptionPage) {
+                console.log("Redirecting to subscription: Inactive subscription detected");
+                navigate('/subscription', { replace: true });
+            } else if (isSubscribed && isSubscriptionPage) {
+                console.log("Redirecting to dashboard: Active subscription detected");
+                navigate('/dashboard', { replace: true });
             }
         }
-    }, [user, profile, loading, navigate, location.pathname, requireFranchise]);
+    }, [user, profile, loading, navigate, location.pathname, requireFranchise, franchise]);
 
     // Enhanced Loading State
     if (loading) {

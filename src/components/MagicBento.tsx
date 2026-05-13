@@ -542,9 +542,8 @@ const MagicBento = ({
                     const cardProps = {
                         className: baseClassName,
                         style: {
-                            backgroundColor: card.color,
                             '--glow-color': glowColor
-                        }
+                        } as any
                     };
 
                     if (enableStars) {

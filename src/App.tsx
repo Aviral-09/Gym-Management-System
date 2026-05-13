@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import PublicSite from './pages/PublicSite';
+import SubscriptionDashboard from './pages/SubscriptionDashboard';
 
 // Dashboard Components
 import DashboardLayout from './dashboard/DashboardLayout';
@@ -31,6 +32,8 @@ const AnimatedRoutes = () => {
         <Route path="/onboarding/:templateId" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/site/:franchiseId" element={<PublicSite />} />
+
+        <Route path="/subscription" element={<SubscriptionDashboard />} />
 
         <Route path="/dashboard" element={
           <ProtectedRoute>

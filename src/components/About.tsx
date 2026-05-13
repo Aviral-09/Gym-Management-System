@@ -1,34 +1,28 @@
 import { motion } from 'framer-motion';
-import { Target, Globe, BarChart3, Shield, Zap, Users } from 'lucide-react';
+
 
 const features = [
     {
-        icon: <Target className="w-6 h-6" />,
         title: "Built for Gym Owners",
         description: "Tailored specifically for the fitness industry. Manage memberships, schedules, and branding effortlessly."
     },
     {
-        icon: <Globe className="w-6 h-6" />,
         title: "Instant Website Launch",
         description: "Get a professional, high-converting website live in seconds. Choose from premium templates."
     },
     {
-        icon: <BarChart3 className="w-6 h-6" />,
         title: "Advanced Analytics",
         description: "Track your gym's growth, member engagement, and revenue with deep-dive analytics."
     },
     {
-        icon: <Users className="w-6 h-6" />,
         title: "Multi-Branch Support",
         description: "Perfect for franchises. Manage all your locations from a single unified super-admin dashboard."
     },
     {
-        icon: <Shield className="w-6 h-6" />,
         title: "Enterprise Security",
         description: "Your data is safe with us. We use industry-standard encryption and security protocols."
     },
     {
-        icon: <Zap className="w-6 h-6" />,
         title: "Lightning Fast Performance",
         description: "Our websites are optimized for speed, ensuring your members have a seamless experience."
     }
@@ -64,9 +58,7 @@ const About = () => {
                             transition={{ delay: index * 0.1 }}
                             className="p-10 rounded-[2.5rem] bg-card border border hover:border-primary/30 transition-all duration-300 group shadow-sm"
                         >
-                            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-8 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                                {feature.icon}
-                            </div>
+
                             <h3 className="text-xl font-black text-foreground mb-4 leading-none tracking-tight">{feature.title}</h3>
                             <p className="text-muted-foreground leading-relaxed font-medium text-sm">
                                 {feature.description}

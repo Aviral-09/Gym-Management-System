@@ -26,7 +26,7 @@ const Templates = () => {
                 console.error("Firestore immediate save failed:", e);
             }
         }
-        navigate(`/onboarding/${templateId}`);
+        navigate('/subscription');
     };
 
     return (
